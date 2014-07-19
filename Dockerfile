@@ -18,22 +18,20 @@ RUN update-locale LANG=en_US.UTF-8
 
 RUN apt-get -y install postgresql-9.3 postgresql-contrib-9.3 postgresql-9.3-postgis-2.1 postgis
 
-RUN apt-get -y install postgresql-9.3 postgresql-contrib-9.3 postgresql-9.3-postgis-2.1 postgis
+# Clean up APT
+RUN apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+
 RUN echo "host    all             all             0.0.0.0/0               md5" >> /etc/postgresql/9.3/main/pg_hba.conf
+
 RUN service postgresql start && /bin/su postgres -c "createuser -d -s -r -l docker" && /bin/su postgres -c "psql postgres -c \"ALTER USER docker WITH ENCRYPTED PASSWORD 'docker'\"" && service postgresql stop
 
 RUN echo "listen_addresses = '*'" >> /etc/postgresql/9.3/main/postgresql.conf
 RUN echo "port = 5432" >> /etc/postgresql/9.3/main/postgresql.conf
 
-ENV POSTGIS_SQL_PATH=`pg_config --sharedir`/contrib/postgis-2.1
 
 EXPOSE 5432
 
-
-ADD init_postgis.sh /init_postgis.sh
-RUN chmod +x /init_postgis.sh
-
 ADD init.sh /init.sh
-RUN chmod +x /init.sh
+RUN chmod 0755 /init.sh
 
 CMD ["/init.sh"]
